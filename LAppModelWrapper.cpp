@@ -542,6 +542,11 @@ static PyObject* PyLAppModel_SetPartOpacity(PyLAppModelObject* self, PyObject* a
     Py_RETURN_NONE;
 }
 
+// 尝试将 Lambda 函数改为标准的函数指针形式
+void hitPartCallback(void* collector, const char* paramId) {
+    PyList_Append((PyObject*)collector, PyUnicode_FromString(paramId));
+}
+
 static PyObject* PyLAppModel_HitPart(PyLAppModelObject* self, PyObject* args)
 {
     float x, y;
@@ -554,13 +559,8 @@ static PyObject* PyLAppModel_HitPart(PyLAppModelObject* self, PyObject* args)
 
     PyObject* list = PyList_New(0);
     
-    // 使用静态函数或者全局函数作为回调
-    auto callback = [](void* collector, const char* paramId) {
-        PyList_Append((PyObject*)collector, PyUnicode_FromString(paramId));
-    };
-
-    // 直接传入 lambda 函数
-    self->model->HitPart(x, y, topOnly, list, callback);
+    // 使用普通函数指针
+    self->model->HitPart(x, y, topOnly, list, hitPartCallback);
 
     return list;
 }
