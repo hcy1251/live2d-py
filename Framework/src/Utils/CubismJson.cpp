@@ -108,21 +108,16 @@ csmBool CubismJson::ParseBytes(const csmByte* buffer, csmInt32 size)
 
     if (_error)
     {
-#if defined(CSM_TARGET_WIN_GL) || defined(_MSC_VER)
-        csmChar strbuf[256] = {'\0'};
-        _snprintf_s(strbuf, 256, 256, "Json parse error : @line %d\n", (_lineCount + 1));
-        _root = CSM_NEW String(strbuf);
-#else
         csmChar strbuf[256] = { '\0' };
         snprintf(strbuf, 256, "Json parse error : @line %d\n", (_lineCount + 1));
         _root = CSM_NEW String(strbuf);
-#endif
+        
         CubismLogInfo("%s", _root->GetRawString());
         return false;
     }
     else if (_root == NULL)
     {
-        _root = CSM_NEW Error(_error, false); //rootは開放されるのでエラーオブジェクトを別途作る
+        _root = CSM_NEW Error(_error, false);
         return false;
     }
     return true;

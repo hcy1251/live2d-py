@@ -404,18 +404,10 @@ public:
      */
     virtual const csmString& GetString(const csmString& defaultValue = "", const csmString& indent = "")
     {
-#if defined(CSM_TARGET_WIN_GL) || defined(_MSC_VER)
-        csmChar strbuf[32] = {'\0'};
-        _snprintf_s(strbuf, 32, 32, "%f", this->_value);
-        _stringBuffer = csmString(strbuf);
-        return _stringBuffer;
-#else
-        // string stream 未対応
         csmChar strbuf[32] = { '\0' };
         snprintf(strbuf, 32, "%f", this->_value);
         _stringBuffer = csmString(strbuf);
         return _stringBuffer;
-#endif
     }
 
     /**
