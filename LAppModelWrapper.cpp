@@ -546,28 +546,22 @@ static PyObject* PyLAppModel_HitPart(PyLAppModelObject* self, PyObject* args)
 {
     float x, y;
     bool topOnly = false;
-    if (PyArg_ParseTuple(args, "ff|b", &x, &y, &topOnly) < 0)
+    if (!PyArg_ParseTuple(args, "ff|b", &x, &y, &topOnly))
     {
         PyErr_SetString(PyExc_TypeError, "Invalid param");
         return NULL;
     }
 
     PyObject* list = PyList_New(0);
-    // std::vector<const char*> list;
-    self->model->HitPart(x, y, topOnly, list, [](void* collector, const char* paramId)
-    {
+    
+    // 使用静态函数或者全局函数作为回调
+    auto callback = [](void* collector, const char* paramId) {
         PyList_Append((PyObject*)collector, PyUnicode_FromString(paramId));
-        // ((std::vector<const char*>*)collector)->push_back(paramId);
-    });
+    };
 
-    // PyObject* pylist = PyList_New(list.size());
-    // int i = 0;
-    // for (auto s: list)
-    // {
-    // PyList_SetItem(pylist, i, PyUnicode_FromString(s));
-    // }
+    // 直接传入 lambda 函数
+    self->model->HitPart(x, y, topOnly, list, callback);
 
-    // return pylist;
     return list;
 }
 
