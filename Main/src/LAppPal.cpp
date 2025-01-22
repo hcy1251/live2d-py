@@ -17,8 +17,6 @@
 #include <chrono>
 #include <Log.hpp>
 
-#include <filesystem>
-
 using std::endl;
 using namespace Csm;
 using namespace std;
@@ -28,31 +26,27 @@ double LAppPal::s_currentFrame = 0.0;
 double LAppPal::s_lastFrame = 0.0;
 double LAppPal::s_deltaTime = 0.0;
 
-
 csmByte* LAppPal::LoadFileAsBytes(const string filePath, csmSizeInt* outSize)
 {
-    //filePath;//
     const char* pathStr = filePath.c_str();
-    std::filesystem::path path = std::filesystem::u8path(filePath);
-
-    size_t size = 0;
-    if (std::filesystem::exists(path))
-    {
-        size = std::filesystem::file_size(path);
-        if (size == 0)
-        {
-            Info("Stat succeeded but file size is zero. path:%s", pathStr);
-            return NULL;
-        }
-    }
-    else
+    
+    // 使用 stat 來檢查文件
+    struct stat st;
+    if (stat(pathStr, &st) != 0)
     {
         Info("Stat failed. errno:%d path:%s", errno, pathStr);
         return NULL;
     }
 
-    std::fstream file;
-    file.open(path, std::ios::in | std::ios::binary);
+    size_t size = st.st_size;
+    if (size == 0)
+    {
+        Info("Stat succeeded but file size is zero. path:%s", pathStr);
+        return NULL;
+    }
+
+    // 使用 ifstream 來讀取文件
+    std::ifstream file(pathStr, std::ios::in | std::ios::binary);
     if (!file.is_open())
     {
         Info("File open failed. path:%s", pathStr);

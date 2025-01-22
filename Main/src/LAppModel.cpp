@@ -96,12 +96,16 @@ LAppModel::~LAppModel()
 
 void LAppModel::LoadAssets(const csmChar *fileName)
 {
-    // linux 下不支持对 "XXX/XXX.model.json/../" 的解析
-    // 因此改用 cpp17 的标准库
-    std::filesystem::path p = std::filesystem::u8path(fileName);
-    // ensure trailing EOS
-    _modelHomeDir = p.parent_path().generic_u8string().c_str();
-    _modelHomeDir += "/";
+    char *dir = strdup(fileName);
+    char *last_slash = strrchr(dir, '/');
+    if (last_slash) {
+        *last_slash = '\0';
+        _modelHomeDir = dir;
+        _modelHomeDir += "/";
+    } else {
+        _modelHomeDir = "./";
+    }
+    free(dir);
 
     Info("load model setting: %s", fileName);
 

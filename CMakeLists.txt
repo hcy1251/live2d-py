@@ -8,8 +8,6 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   )
 endif()
 
-# set(CMAKE_BUILD_TYPE "Release")
-
 message("${CMAKE_BUILD_TYPE}")
 
 set(OUTPUT_LIB_NAME LAppModelWrapper)
@@ -22,7 +20,6 @@ if(DEFINED PYTHON_INSTALLATION_PATH)
     message("Found PYTHON_INSTALLATION_PATH in environment variables")
     set(CMAKE_PREFIX_PATH ${PYTHON_INSTALLATION_PATH})
 else()
-    # 手动设置 python 路径
     message("Not found PYTHON_INSTALLATION_PATH in environment variables. \nUse default path.")
     set(CMAKE_PREFIX_PATH D:/Python/x64/3.10.0)
 endif()
@@ -52,7 +49,7 @@ add_subdirectory(Main)
 add_library(LAppModelWrapper SHARED LAppModelWrapper.cpp)
 target_link_libraries(LAppModelWrapper PRIVATE Main Python3::SABIModule)
 
-# Configure for Linux / Windows
+# Configure for different platforms
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
   set(MODULE_NAME lib${OUTPUT_LIB_NAME}.so)
   set(OUTPUT_NAME live2d.so)
@@ -60,15 +57,30 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
   set(MODULE_NAME ${OUTPUT_LIB_NAME}.dll)
   set(OUTPUT_NAME live2d.pyd)
 elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
-  set(MODULE_NAME lib${OUTPUT_LIB_NAME}.so)
+  set(MODULE_NAME lib${OUTPUT_LIB_NAME}.dylib)
   set(OUTPUT_NAME live2d.so)
+  # 為 macOS 設置特定屬性
+  set_target_properties(LAppModelWrapper PROPERTIES
+    PREFIX "lib"
+    SUFFIX ".dylib"
+    LINK_FLAGS "-undefined dynamic_lookup"
+    MACOSX_RPATH ON)
 endif()
 
 # Post build commands
-add_custom_command(
-  TARGET ${OUTPUT_LIB_NAME}
-  POST_BUILD
-  COMMAND
-    ${CMAKE_COMMAND} -E
-      copy $<TARGET_FILE_DIR:${OUTPUT_LIB_NAME}>/${MODULE_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/package/live2d/v3/${OUTPUT_NAME}
-)
+if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+  add_custom_command(
+    TARGET ${OUTPUT_LIB_NAME}
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/package/live2d/v3
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${OUTPUT_LIB_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/package/live2d/v3/${OUTPUT_NAME}
+  )
+else()
+  add_custom_command(
+    TARGET ${OUTPUT_LIB_NAME}
+    POST_BUILD
+    COMMAND
+      ${CMAKE_COMMAND} -E
+        copy $<TARGET_FILE_DIR:${OUTPUT_LIB_NAME}>/${MODULE_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/package/live2d/v3/${OUTPUT_NAME}
+  )
+endif()
